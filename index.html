@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini-ERP / Painel Financeiro</title>
+    <title>Simulador Financeiro</title>
     <style>
         /* Reset e configurações básicas */
         * {
@@ -193,10 +193,21 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease;
             position: relative;
+            cursor: pointer;
         }
 
         .kpi-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .kpi-card::after {
+            content: 'ℹ️';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            opacity: 0.7;
         }
 
         .kpi-card.negative {
@@ -390,6 +401,100 @@
             line-height: 1.7;
         }
 
+        /* Estilos do Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .modal-header {
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: #2d3748;
+            font-weight: bold;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #718096;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #e53e3e;
+        }
+
+        .modal-body p {
+            color: #4a5568;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        /* Estilo para a Fórmula */
+        .modal-formula {
+            background-color: #fff7ed; /* Laranja bem claro */
+            border-left: 4px solid #ed8936;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            color: #2d3748;
+        }
+        
+        .modal-formula code {
+            display: block;
+            margin-top: 6px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #c05621;
+        }
+
+        .modal-example {
+            background-color: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 0.95em;
+            color: #2d3748;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Responsivo */
         @media (max-width: 1024px) {
             .main-layout {
@@ -442,39 +547,15 @@
                 color: black !important;
                 border: 1px solid #ccc;
             }
+
+            .kpi-card::after {
+                display: none;
+            }
         }
 
         /* Utility classes */
-        .hidden {
-            display: none;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
         .mt-20 {
             margin-top: 20px;
-        }
-
-        .mb-20 {
-            margin-bottom: 20px;
-        }
-
-        .flex {
-            display: flex;
-        }
-
-        .justify-between {
-            justify-content: space-between;
-        }
-
-        .align-center {
-            align-items: center;
-        }
-
-        .gap-10 {
-            gap: 10px;
         }
     </style>
 </head>
@@ -482,7 +563,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🏪 Mini-ERP / Painel Financeiro</h1>
+            <h1>🏪 Simulador Financeiro</h1>
             <p>Sistema de Gestão Financeira Simplificado para Lojas</p>
         </div>
 
@@ -623,6 +704,7 @@
             <!-- Dashboard -->
             <div class="dashboard">
                 <h2>📈 Dashboard - Indicadores Financeiros</h2>
+                <p style="font-size: 0.9em; color: #718096; margin-bottom: 15px;">ℹ️ Clique nos cartões para ver a explicação e fórmula.</p>
                 
                 <!-- Alertas -->
                 <div class="alerts" id="alerts-container"></div>
@@ -680,23 +762,155 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Como Interpretar -->
-        <div class="help-section">
-            <h2>❓ Como Interpretar os Indicadores</h2>
-            <p><strong>Margem Bruta:</strong> Indica quanto sobra das vendas após descontar o custo das mercadorias. Uma margem saudável varia entre 30-50% dependendo do setor.</p>
-            <p><strong>Margem Líquida:</strong> Mostra o lucro real após todas as despesas. Margens acima de 10% são consideradas boas para o varejo.</p>
-            <p><strong>Ponto de Equilíbrio:</strong> Valor mínimo de vendas necessário para cobrir todos os custos fixos. Vendas abaixo deste valor geram prejuízo.</p>
-            <p><strong>Giro de Estoque:</strong> Indica quantas vezes o estoque foi renovado no período. Valores altos sugerem boa gestão de estoque.</p>
-            <p><strong>ROI (Retorno sobre Investimento):</strong> Mede a eficiência do capital investido. ROI positivo indica que o negócio está gerando retorno.</p>
+    <!-- Modal de Explicação -->
+    <div id="infoModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Título</h3>
+                <button class="close-modal" onclick="fecharModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalDescription">Descrição aqui.</p>
+                
+                <div class="modal-formula">
+                    <strong>🧮 Fórmula:</strong>
+                    <code id="modalFormula">Fórmula aqui</code>
+                </div>
+
+                <div class="modal-example">
+                    <strong>📝 Exemplo prático:</strong><br>
+                    <span id="modalExample">Exemplo aqui.</span>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        // Dicionário de explicações e fórmulas para os indicadores
+        const explicacoes = {
+            'fv': {
+                titulo: "Faturamento Bruto",
+                descricao: "É a soma de todo o dinheiro que entrou no caixa exclusivamente através das vendas dos seus produtos ou serviços, antes de descontar qualquer custo.",
+                formula: "Soma das Vendas",
+                exemplo: "Se você vendeu 10 camisetas a R$ 50,00 cada, seu Faturamento Bruto é R$ 500,00."
+            },
+            'cmv': {
+                titulo: "Custo das Mercadorias Vendidas (CMV)",
+                descricao: "Quanto a sua empresa gastou para comprar ou produzir exatamente os produtos que foram vendidos neste período.",
+                formula: "Estoque Inicial + Compras - Estoque Final",
+                exemplo: "Se você vendeu uma camiseta por R$ 50,00, mas pagou R$ 20,00 para o fornecedor por ela, seu CMV é R$ 20,00."
+            },
+            'lb': {
+                titulo: "Lucro Bruto",
+                descricao: "É o que sobra do dinheiro das vendas depois de pagar apenas o custo do produto. Serve para pagar as outras contas da empresa (aluguel, luz, etc.).",
+                formula: "Faturamento - CMV",
+                exemplo: "Vendeu por R$ 500,00 e os produtos custaram R$ 200,00. Lucro Bruto = R$ 300,00."
+            },
+            'dt': {
+                titulo: "Despesas Totais",
+                descricao: "A soma de todos os gastos para manter a empresa funcionando, incluindo aluguel, salários, contas de luz, comissões e imprevistos.",
+                formula: "Custos Fixos + Custos Variáveis + Outros Custos",
+                exemplo: "Aluguel (R$ 1000) + Luz (R$ 200) + Salário (R$ 1500) = Despesas Totais de R$ 2700,00."
+            },
+            'll': {
+                titulo: "Lucro Líquido",
+                descricao: "É o dinheiro que realmente sobra no bolso da empresa depois de pagar TUDO (fornecedores, aluguel, funcionários, impostos).",
+                formula: "Lucro Bruto - Despesas Totais",
+                exemplo: "Se entrou R$ 5000,00 e você gastou R$ 4000,00 com tudo, seu Lucro Líquido é R$ 1000,00."
+            },
+            'mlb': {
+                titulo: "Margem Bruta",
+                descricao: "Porcentagem que mostra quanto você ganha em cima do produto. Indica a eficiência na compra e venda.",
+                formula: "(Lucro Bruto ÷ Faturamento) × 100",
+                exemplo: "Uma margem bruta de 40% significa que de cada R$ 100,00 vendidos, R$ 40,00 sobram para pagar as despesas fixas."
+            },
+            'mll': {
+                titulo: "Margem Líquida",
+                descricao: "Porcentagem final de lucro real sobre as vendas. Mostra a saúde financeira verdadeira do negócio.",
+                formula: "(Lucro Líquido ÷ Faturamento) × 100",
+                exemplo: "Margem líquida de 10% significa que a cada R$ 100,00 que entra no caixa, R$ 10,00 é lucro limpo."
+            },
+            'mc': {
+                titulo: "Margem de Contribuição",
+                descricao: "É o quanto sobra de cada venda para pagar as despesas fixas (aluguel, salários fixos) e gerar lucro, depois de descontar os custos variáveis.",
+                formula: "((Faturamento - Variáveis - CMV) ÷ Faturamento) × 100",
+                exemplo: "Se sobra R$ 30,00 de cada produto para pagar o aluguel, essa é sua margem de contribuição unitária."
+            },
+            'pe': {
+                titulo: "Ponto de Equilíbrio",
+                descricao: "É o valor mínimo que você precisa vender no mês para não ter prejuízo. Nesse ponto, o lucro é zero (empata), mas todas as contas são pagas.",
+                formula: "Custos Fixos ÷ (Margem de Contribuição ÷ 100)",
+                exemplo: "Se seu Ponto de Equilíbrio é R$ 10.000,00, você só começa a ter lucro a partir da venda de R$ 10.001,00."
+            },
+            'em': {
+                titulo: "Estoque Médio",
+                descricao: "O valor médio em dinheiro de mercadorias paradas na sua loja durante o período.",
+                formula: "(Estoque Inicial + Estoque Final) ÷ 2",
+                exemplo: "Começou o mês com R$ 20.000 e terminou com R$ 10.000. Estoque médio = R$ 15.000."
+            },
+            'ge': {
+                titulo: "Giro de Estoque",
+                descricao: "Quantas vezes você vendeu e repôs seu estoque inteiro no período. Quanto maior, melhor (significa que o produto não fica encalhado).",
+                formula: "CMV ÷ Estoque Médio",
+                exemplo: "Giro de 2x significa que você renovou seu estoque duas vezes nesse período."
+            },
+            'tm': {
+                titulo: "Ticket Médio",
+                descricao: "O valor médio que cada cliente gasta quando compra na sua loja.",
+                formula: "Faturamento ÷ Número de Vendas",
+                exemplo: "Se o Ticket Médio é R$ 150,00, significa que, na média, cada venda realizada foi nesse valor."
+            },
+            'fc': {
+                titulo: "Fluxo de Caixa",
+                descricao: "A diferença simples entre todo o dinheiro que entrou e todo o dinheiro que saiu da conta no período. Mostra a disponibilidade imediata de dinheiro.",
+                formula: "Entradas - Saídas",
+                exemplo: "Entrou R$ 5.000 e saiu R$ 4.500. Fluxo de Caixa positivo de R$ 500,00."
+            },
+            'roi': {
+                titulo: "ROI (Retorno sobre Investimento)",
+                descricao: "Porcentagem que diz quanto você ganhou em relação ao que investiu inicialmente no negócio.",
+                formula: "(Lucro Líquido ÷ Investimento Total) × 100",
+                exemplo: "ROI de 10% significa que para cada R$ 100,00 investidos, você recuperou os R$ 100,00 e ganhou mais R$ 10,00."
+            },
+            'precoSugerido': {
+                titulo: "Preço Sugerido Médio",
+                descricao: "Valor de venda recomendado para seus produtos baseado no Mark-up (margem) que você definiu.",
+                formula: "(Custo Unitário × Mark-up)",
+                exemplo: "Se o produto custa R$ 50,00 e o mark-up é 2.0, o preço sugerido é R$ 100,00."
+            }
+        };
+
         // Variáveis globais para armazenar dados
         let dadosFinanceiros = {};
         let periodosHistorico = JSON.parse(localStorage.getItem('erp_simulafinanc_v1_periodos')) || [];
         let dadosCalculados = {};
+
+        // Funções do Modal
+        function mostrarExplicacao(chave) {
+            const dados = explicacoes[chave];
+            if (dados) {
+                document.getElementById('modalTitle').textContent = dados.titulo;
+                document.getElementById('modalDescription').textContent = dados.descricao;
+                document.getElementById('modalFormula').textContent = dados.formula;
+                document.getElementById('modalExample').textContent = dados.exemplo;
+                
+                document.getElementById('infoModal').style.display = 'flex';
+            }
+        }
+
+        function fecharModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('infoModal');
+            if (event.target === modal) {
+                fecharModal();
+            }
+        }
 
         // Função para formatar valores monetários
         function formatarMoeda(valor) {
@@ -848,6 +1062,11 @@
             kpis.forEach(kpi => {
                 const kpiCard = document.createElement('div');
                 kpiCard.classList.add('kpi-card');
+                
+                // Adicionar evento de clique para abrir o modal
+                kpiCard.onclick = function() {
+                    mostrarExplicacao(kpi.key);
+                };
                 
                 // Aplicar classes condicionais baseadas no valor
                 if (kpi.isProfit) {
